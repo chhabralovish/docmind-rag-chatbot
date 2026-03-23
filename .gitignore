@@ -1,0 +1,48 @@
+# Environment variables — NEVER commit your API keys!
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+wheels/
+pip-wheel-metadata/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# VS Code
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Streamlit
+.streamlit/secrets.toml
+
+# FAISS index files (generated at runtime)
+*.index
+faiss_index/
+
+# Temp files
+*.log
+*.tmp
+tmp/
+temp/
