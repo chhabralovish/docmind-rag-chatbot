@@ -3,8 +3,9 @@ import os
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 
 
 # ── Prompt Template ───────────────────────────────────────────────────────────
@@ -24,17 +25,19 @@ Answer:"""
 )
 
 
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
+
+
 class RAGPipeline:
     def __init__(self, pdf_file, llm_provider: str, api_key: str):
         self.llm_provider = llm_provider
         self.api_key = api_key
-        self.vectorstore = None
-        self.qa_chain = None
 
         docs = self._load_pdf(pdf_file)
         chunks = self._split_documents(docs)
         self.vectorstore = self._create_vectorstore(chunks)
-        self.qa_chain = self._build_chain()
+        self.chain = self._build_chain()
 
     # ── Load PDF ──────────────────────────────────────────────────────────────
     def _load_pdf(self, pdf_file):
@@ -73,7 +76,6 @@ class RAGPipeline:
             )
 
         elif "Groq" in self.llm_provider:
-            # Groq doesn't provide embeddings — use HuggingFace (free, local)
             from langchain_community.embeddings import HuggingFaceEmbeddings
             return HuggingFaceEmbeddings(
                 model_name="sentence-transformers/all-MiniLM-L6-v2"
@@ -100,27 +102,27 @@ class RAGPipeline:
         elif "Groq" in self.llm_provider:
             from langchain_groq import ChatGroq
             return ChatGroq(
-                model="llama3-8b-8192",
+                model="llama-3.3-70b-versatile",
                 temperature=0.2,
                 groq_api_key=self.api_key
             )
 
-    # ── Build RetrievalQA Chain ───────────────────────────────────────────────
+    # ── Build LCEL Chain (modern LangChain) ───────────────────────────────────
     def _build_chain(self):
         llm = self._get_llm()
         retriever = self.vectorstore.as_retriever(
             search_type="similarity",
             search_kwargs={"k": 4}
         )
-        return RetrievalQA.from_chain_type(
-            llm=llm,
-            chain_type="stuff",
-            retriever=retriever,
-            chain_type_kwargs={"prompt": RAG_PROMPT},
-            return_source_documents=False
+        # Modern LCEL (LangChain Expression Language) chain
+        chain = (
+            {"context": retriever | format_docs, "question": RunnablePassthrough()}
+            | RAG_PROMPT
+            | llm
+            | StrOutputParser()
         )
+        return chain
 
     # ── Query ─────────────────────────────────────────────────────────────────
     def query(self, question: str) -> str:
-        result = self.qa_chain.invoke({"query": question})
-        return result["result"]
+        return self.chain.invoke(question)
