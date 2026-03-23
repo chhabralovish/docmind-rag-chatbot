@@ -139,7 +139,7 @@ This prevents hallucinations and keeps the LLM's answers strictly based on your 
 
 ## 👨‍💻 Author
 
-**Lovish Chhabra** — Senior Data Scientist & AI Engineer
+**Lovish Chhabra** — Data Scientist & AI Engineer
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/lovish-chhabra/)
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat-square&logo=github)](https://github.com/chhabralovish)
